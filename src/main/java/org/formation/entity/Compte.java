@@ -2,9 +2,9 @@ package org.formation.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import org.formation.entity.Client;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
 
 import java.time.LocalDate;
 
@@ -12,8 +12,7 @@ import java.time.LocalDate;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type_compte")
 @Data
-@Getter
-@Setter
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "numeroCompte")
 public abstract class Compte {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +22,6 @@ public abstract class Compte {
 
     @ManyToOne
     @JoinColumn(name = "client_id") // Foreign key in the Account table
+    @JsonIdentityReference(alwaysAsId = true)
     private Client client;
 }
-

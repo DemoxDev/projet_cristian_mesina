@@ -2,9 +2,10 @@ package org.formation.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +13,7 @@ import java.util.List;
 @Entity
 @Data
 @NoArgsConstructor
-@Getter
-@Setter
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,11 +22,10 @@ public class Client {
     private String prenom;
     private String adresse;
 
-    // One client has a list of accounts
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
     private List<Compte> comptes = new ArrayList<>();
 
     @ManyToOne
+    @JsonIdentityReference(alwaysAsId = true)
     private Conseiller conseiller;
 }
-
