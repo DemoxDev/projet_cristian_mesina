@@ -1,0 +1,65 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+abstract class Compte {
+    - numeroCompte : Long
+    - solde : Double
+    - dateOuverture : Date
+    + crediter(montant : Double)
+    + debiter(montant : Double)
+}
+
+class CompteCourant {
+    - decouvertAutorise : Double = 1000
+}
+
+class CompteEpargne {
+    - tauxRemuneration : Double = 0.03
+}
+
+Compte <|-- CompteCourant
+Compte <|-- CompteEpargne
+
+class Client {
+    - nom : String
+    - prenom : String
+    - adresse : String
+    - codePostal : String
+    - ville : String
+    - telephone : String
+}
+
+class Conseiller {
+    - id : Long
+}
+
+class Gerant {
+    - id : Long
+}
+
+class Agence {
+    - idIdentification : String
+    - dateCreation : Date
+}
+
+Agence "1" -- "1" Gerant : dirige <
+Gerant "1" -- "*" Conseiller : supervise >
+Conseiller "1" -- "0..10" Client : gère >
+Client "1" -- "1..*" Compte : détient >
+
+note right of Conseiller
+  Contrainte métier:
+  Max 10 clients
+end note
+
+note right of CompteCourant
+  Découvert par défaut: 1000€
+end note
+
+@enduml
