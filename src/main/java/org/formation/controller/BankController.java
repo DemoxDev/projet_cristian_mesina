@@ -23,26 +23,24 @@ public class BankController {
     private final ConseillerRepository conseillerRepository;
     private final ClientService clientService;
     private final CompteService compteService;
+    private final ConseillerService conseillerService;
 
-    // 1. Transfer
     @PostMapping("/virement")
     public ResponseEntity<String> transfer(@RequestParam Long from, @RequestParam Long to, @RequestParam double amount) {
         try {
             virementService.effectuerVirement(from, to, amount);
-            return ResponseEntity.ok("Transfer successful");
+            return ResponseEntity.ok("Transfert réussi");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // 2. Wealth Check
     @GetMapping("/patrimoine/{clientId}")
     public ResponseEntity<String> checkWealth(@PathVariable Long clientId) {
         Client c = clientRepository.findById(clientId).orElseThrow();
         return ResponseEntity.ok(patrimoineService.analyzePatrimoine(c));
     }
 
-    // 3. Audit
     @GetMapping("/audit")
     public List<Compte> runAudit() {
         return auditService.findRiskyAccounts();
@@ -55,7 +53,7 @@ public class BankController {
         clientRepository.deleteAll();
         conseillerRepository.deleteAll();
 
-        // Create Conseillers
+        // Create the test data
         Conseiller conseiller1 = new Conseiller();
         conseiller1.setNom("Smith");
         conseillerRepository.save(conseiller1);
@@ -64,7 +62,7 @@ public class BankController {
         conseiller2.setNom("Johnson");
         conseillerRepository.save(conseiller2);
 
-        // 1. Rich Client (Patrimoine > 500k) - For wealth management testing
+        // 1. Patrimoine > 500k
         Client richClient = new Client();
         richClient.setNom("Musk");
         richClient.setPrenom("Elon");
@@ -84,7 +82,7 @@ public class BankController {
         richCE.setTauxRemuneration(0.03);
         compteRepository.save(richCE);
 
-        // 2. Risky Client (Overdraft > 5000) - For audit testing
+        // 2. Decouvert > 5000
         Client riskyClient = new Client();
         riskyClient.setNom("Broke");
         riskyClient.setPrenom("Johnny");
@@ -94,11 +92,11 @@ public class BankController {
 
         CompteCourant riskyCC = new CompteCourant();
         riskyCC.setClient(riskyClient);
-        riskyCC.setSolde(-6000); // Dangerous overdraft!
+        riskyCC.setSolde(-6000);
         riskyCC.setDecouvertAutorise(10000);
         compteRepository.save(riskyCC);
 
-        // 3. Normal Client with both account types - For virement testing
+        // 3. Client normal avec les deux types de compte
         Client normalClient1 = new Client();
         normalClient1.setNom("Dupont");
         normalClient1.setPrenom("Alice");
@@ -118,7 +116,7 @@ public class BankController {
         normalCE1.setTauxRemuneration(0.025);
         compteRepository.save(normalCE1);
 
-        // 4. Another Normal Client - Transfer destination
+        // 4. Autre client normal avec les deux types de compte pour déstinataire
         Client normalClient2 = new Client();
         normalClient2.setNom("Martin");
         normalClient2.setPrenom("Bob");
@@ -138,7 +136,7 @@ public class BankController {
         normalCE2.setTauxRemuneration(0.02);
         compteRepository.save(normalCE2);
 
-        // 5. Client with minimal balance - Edge case for transfers
+        // 5. Client avec solde minimal
         Client poorClient = new Client();
         poorClient.setNom("Pauvre");
         poorClient.setPrenom("Marie");
@@ -153,22 +151,22 @@ public class BankController {
         compteRepository.save(poorCC);
 
         return String.format(
-            "Sample data initialized successfully!%n" +
-            "- %d Conseillers%n" +
-            "- %d Clients%n" +
-            "- %d Comptes%n%n" +
-            "Test scenarios:%n" +
-            "1. Wealth Check: Client '%s %s' (ID=%d) has patrimoine > 500k%n" +
-            "2. Audit: Client '%s %s' has overdraft > 5000 (Account ID=%d)%n" +
-            "3. Transfers: Use accounts from clients '%s' and '%s'%n" +
-            "4. Edge cases: Client '%s' has minimal balance",
-            conseillerRepository.count(),
-            clientRepository.count(),
-            compteRepository.count(),
-            richClient.getPrenom(), richClient.getNom(), richClient.getId(),
-            riskyClient.getPrenom(), riskyClient.getNom(), riskyCC.getNumeroCompte(),
-            normalClient1.getNom(), normalClient2.getNom(),
-            poorClient.getNom()
+                "Données de test initialisées.%n <br>" +
+                        "- %d Conseillers%n <br>" +
+                        "- %d Clients%n <br>" +
+                        "- %d Comptes%n%n <br>" +
+                        "Scenarios de test:%n <br>" +
+                        "1. Patrimoine > 500k: '%s %s' (ID=%d)%n <br>" +
+                        "2. Découvert > 5000: '%s %s' (Compte ID=%d) %n <br>" +
+                        "3. Transferts entre clients normaux ('%s' et '%s') %n <br>" +
+                        "4. Cas limite de solde minimal: '%s' %n%n <br>",
+                conseillerRepository.count(),
+                clientRepository.count(),
+                compteRepository.count(),
+                richClient.getPrenom(), richClient.getNom(), richClient.getId(),
+                riskyClient.getPrenom(), riskyClient.getNom(), riskyCC.getNumeroCompte(),
+                normalClient1.getNom(), normalClient2.getNom(),
+                poorClient.getNom()
         );
     }
 
@@ -197,6 +195,44 @@ public class BankController {
             return ResponseEntity.badRequest().build();
         }
     }
-}
 
-// give me a list of requests to make with postman to cover all endpoints and test cases, such as creating a client, creating accounts, performing transfers, checking wealth, running audits, creating conseillers, viewing account info, and so on... be extensive
+    @PostMapping("/admin/conseillers")
+    public ResponseEntity<Conseiller> createConseiller(@RequestBody Conseiller conseiller) {
+        try {
+            Conseiller saved = conseillerService.createConseiller(conseiller);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /* Inutile et ne fonctionne pas, on attribue le conseiller lors de la création du client
+    @PostMapping("/admin/conseillers/{conseillerId}/clients/{clientId}")
+    public ResponseEntity<Conseiller> assignClientToConseiller(
+            @PathVariable Long conseillerId,
+            @PathVariable Long clientId) {
+        try {
+            Conseiller updated = conseillerService.assignClientToConseiller(conseillerId, clientId);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+     */
+
+    @GetMapping("/getConseillers")
+    public List<Conseiller> getAllConseillers() {
+        return conseillerRepository.findAll();
+    }
+
+    @GetMapping("/getClients")
+    public List<Client> getAllClients() {
+        return clientRepository.findAll();
+    }
+
+    @GetMapping("/getComptes")
+    public List<Compte> getAllComptes() {
+        return compteRepository.findAll();
+    }
+
+}

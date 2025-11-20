@@ -24,6 +24,7 @@ public class ConseillerServiceImpl implements ConseillerService {
         return conseillerRepository.save(conseiller);
     }
 
+    /* Inutile avec la méthode createClient dans ClientServiceImpl
     @Override
     public Conseiller assignClientToConseiller(Long conseillerId, Long clientId) {
         Conseiller conseiller = conseillerRepository.findById(conseillerId)
@@ -51,4 +52,5 @@ public class ConseillerServiceImpl implements ConseillerService {
 
         return conseillerRepository.save(conseiller);
     }
+     */
 }
