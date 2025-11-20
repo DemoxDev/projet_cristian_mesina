@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -16,5 +17,5 @@ public class Conseiller {
     private String nom;
 
     @OneToMany(mappedBy = "conseiller")
-    private List<Client> clients;
+    private List<Client> clients = new ArrayList<>();
 }
